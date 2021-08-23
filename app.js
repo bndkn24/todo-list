@@ -1,41 +1,70 @@
-var todoList = [];
+const todoInput = document.querySelector(".form-control");
+const todoItemsList = document.querySelector(".list-group");
 
-const inputItem = document.querySelector(".form-control");
+let todos = [];
 
-retriveLocalStorage();
+getFromLocalStorage();
 
-function retriveLocalStorage() {
-  if (localStorage.getItem("todos") !== null) {
-    todosList = JSON.parse(localStorage.getItem("todos"));
-    todosList.forEach((item) => {
-      showItem(item);
-    });
+function getFromLocalStorage() {
+  if (localStorage.getItem("todos")) {
+    todos = JSON.parse(localStorage.getItem("todos"));
+    showTodos(todos);
   }
 }
 
 document.querySelector(".btn").addEventListener("click", function () {
-  if (inputItem != null) {
-    addToLocalStorage();
+  addTodos(todoInput.value);
+});
+
+function addTodos(item) {
+  if (item !== "") {
+    const todo = {
+      id: Date.now(),
+      name: item,
+      completed: false,
+    };
+    todos.push(todo);
+    addToLocalStorage(todos);
+    todoInput.value = "";
+  }
+}
+
+function addToLocalStorage(todos) {
+  localStorage.setItem("todos", JSON.stringify(todos));
+  showTodos(todos);
+}
+
+function showTodos(todos) {
+  todoItemsList.innerHTML = "";
+
+  todos.forEach(function (item) {
+    let todoTags = `<div class="list-group-item">
+    <input class="form-check-input" type="checkbox"/>
+    <span class="item`;
+
+    if (item.completed) {
+      todoTags += " checked";
+    }
+
+    todoTags += `" data-key="${item.id}"> ${item.name} </span>\n</div>`;
+
+    document.querySelector(".list-group").innerHTML += todoTags;
+  });
+}
+
+todoItemsList.addEventListener("click", function (event) {
+  if (event.target.type === "checkbox") {
+    toggle(event.target.nextElementSibling.attributes["data-key"].value);
+    console.log(event);
   }
 });
 
-function addToLocalStorage() {
-  const itemObj = {
-    name: inputItem.value,
-    checked: false,
-  };
-  todoList.push(itemObj);
-  localStorage.setItem("todos", JSON.stringify(todoList));
-  showItem(itemObj);
-}
+function toggle(id) {
+  todos.forEach(function (item) {
+    if (item.id == id) {
+      item.completed = !item.completed;
+    }
+  });
 
-function showItem(item) {
-  document.querySelector(
-    ".list-group"
-  ).innerHTML += `<div class="list-group-item">
-                    <input class="form-check-input strike" type="checkbox" value="" />
-                    <span class="item"> ${item.name} </span>
-                  </div>`;
-
-  inputItem.value = "";
+  addToLocalStorage(todos);
 }
